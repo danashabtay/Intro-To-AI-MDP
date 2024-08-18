@@ -3,6 +3,41 @@ from simulator import Simulator
 from typing import Dict, List, Tuple
 import numpy as np
 
+from copy import deepcopy
+import random
+
+actions = ['UP', 'DOWN', 'RIGHT', 'LEFT']
+
+
+def get_states(mdp):
+    states = []
+    for row in range(mdp.num_row):
+            for col in range(mdp.num_col):
+                if mdp.board[row][col] == "WALL":
+                    continue
+                else:
+                    states.append((row, col, float(mdp.board[row][col])))
+    
+def get_max_value_and_action(mdp, U, row, col):
+    values = []
+    max_action = None
+    for action in actions: #check for each legal action its E value
+        s = []
+        for i in range(4):
+            p = mdp.transition_function[action][i]
+            if p == 0:
+                continue
+            next_state = mdp.step((row, col), actions[i])
+            s.append(p * U[next_state[0]][next_state[1]])   
+        values.append([sum(s), action])
+        values_list = [j[0] for j in values]
+        max_value = max(values_list)
+        max_index = values_list.index(max_value)
+        max_action = values[max_index][1]
+
+    return (max_value,max_action)               
+
+
 def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> np.ndarray:
     # Given the mdp, the initial utility of each state - U_init,
     #   and the upper limit - epsilon.
@@ -13,9 +48,27 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
     U_final = None
     # TODO:
     # ====== YOUR CODE: ======
-    raise NotImplementedError
-    # ========================
+    
+    U = deepcopy(U_init)
+    delta = 1
+    
+    while delta >= epsilon * ((1-mdp.gamma) / mdp.gamma):
+        for state in mdp.terminal_states:
+            row = state[0]
+            col = state[1]
+            U[row][col] = float(mdp.board[row][col])
+        U_final = deepcopy(U)
+        delta = 0
+        states = get_states(mdp)
+        for row, col, value in states:
+            if(row,col) not in mdp.terminal_states:
+                max_val, _ = get_max_value_and_action(mdp,U_final,row,col)
+                U[row][col] = float(value + mdp.gamma * max_val)
+                delta = max(delta, abs(U[row][col] - U_final[row][col]))
     return U_final
+    #raise NotImplementedError
+    # ========================
+    
 
 def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     # Given the mdp and the utility of each state - U (which satisfies the Belman equation)
