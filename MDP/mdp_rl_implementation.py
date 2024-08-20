@@ -75,18 +75,19 @@ def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     num_cols = mdp.num_col
     # initialze policy to None:
     policy = np.full((num_rows, num_cols), None, dtype=object)
-    
-    for row in range(num_rows):
-        for col in range(num_cols):
+
+    for row in range(mdp.num_row):
+        for col in range(mdp.num_col):
             if (row, col) not in mdp.terminal_states and mdp.board[row][col] != "WALL":
                 best_action = None
                 best_value = -float('inf')
                 
                 for action in Action:
-                    next_state = mdp.step((row, col), action)
+                    next_state = mdp.step((row, col), action.value)
                     reward = mdp.get_reward(next_state)
-                    next_row, next_col = next_state
-                    utility = reward + mdp.gamma * U[next_row, next_col]
+                    next_row = next_state[0]
+                    next_col = next_state[1]
+                    utility = float(reward) + (mdp.gamma * U[next_row][next_col])
                     
                     if utility > best_value:
                         best_value = utility
@@ -133,15 +134,15 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
 
             sum_on_next_steps = 0
             action = policy[row][col]  # The action taken in the current state according to the policy
-            action_enum = Action[action]  # Convert the action to the Action enum type
+            #action_enum = Action[action]  # Convert the action to the Action enum type
 
             # For each possible next state...
             for i in range(4):
-                prob = mdp.transition_function[action_enum][i]
+                prob = mdp.transition_function[action][i]
                 next_state = mdp.step((row, col), list(Action)[i])
                 sum_on_next_steps = sum_on_next_steps + prob * (V[next_state[0]][next_state[1]])
             
-            v = reward + discount_factor * sum_on_next_steps
+            v = float(reward) + discount_factor * sum_on_next_steps
             V[row][col] = v
         
     return V
