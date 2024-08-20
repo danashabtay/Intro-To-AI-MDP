@@ -121,45 +121,6 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
             V[row][col] = v
         
     return V
-    
-    
-    
-    discount_factor= mdp.gamma
-    theta=0.00001
-    
-   # Initialize V
-    V = np.zeros((mdp.num_row, mdp.num_col))
-
-    while True:
-        delta = 0
-        # For each state:
-        for row in range(mdp.num_row):
-            for col in range(mdp.num_col):
-                if (row, col) in mdp.terminal_states or mdp.board[row][col] == "WALL":
-                    continue
-
-                sum_v = 0
-                action = policy[row][col]  # The action taken in the current state according to the policy
-                action_enum = Action[action]  # Convert the action to the Action enum type
-
-                # For each possible next state...
-                for i in range(4):
-                    prob = mdp.transition_function[action_enum][i]
-                    next_state = mdp.step((row, col), list(Action)[i])
-                    sum_v = sum_v + prob * (V[next_state[0]][next_state[1]])
-
-                reward = mdp.get_reward((row, col))
-                v = reward + discount_factor * sum_v
-                
-                # How much our value function changed (across any states)
-                delta = max(delta, np.abs(v - V[row][col]))
-                V[row][col] = v
-
-        # Stop evaluating once our value function change is below a threshold
-        if delta < theta:
-            break
-    
-    return V
 
     # raise NotImplementedError
     # ========================
