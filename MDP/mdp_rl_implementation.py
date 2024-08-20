@@ -92,46 +92,39 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
     # TODO:
     # ====== YOUR CODE: ======
     
-    # Initialize V
-    V = np.zeros((mdp.num_row, mdp.num_col))
+        # Initialize U 
+    U = np.full((mdp.num_row, mdp.num_col), 0.0, dtype=object)
 
-    discount_factor= mdp.gamma
-
-    # For each state:
     for row in range(mdp.num_row):
         for col in range(mdp.num_col):
+            state = (row, col)
             if mdp.board[row][col] == "WALL":
-                V[row][col] = None
-    
-    for state in mdp.terminal_states:  
-            row, col = state[0], state[1]
-            V[row][col] = float(mdp.board[row][col])
+                U[row][col] = None
+            if state in mdp.terminal_states:
+                U[row][col] = float(mdp.get_reward(state))
             
-    for state in get_states(mdp): 
-        if state in mdp.terminal_states:
-            continue
-        else:
-            row, col = state[0], state[1]
-                    
-            reward = mdp.get_reward((row, col))
 
-            sum_on_next_steps = 0
-            action = policy[row][col]  # The action taken in the current state according to the policy
-            if action is None:
-                V[row][col] = None
-                continue
-            #action_enum = Action[action]  # Convert the action to the Action enum type
+    # Evaluate the policy until it converges:
+    epsilon = 10 ** (-3)
+    while True:
+        theta = 0
+        for row in range(mdp.num_row):
+            for col in range(mdp.num_col):
+                state = (row, col)
+                if state in mdp.terminal_states or mdp.board[row][col] == "WALL":
+                    continue
+                action = Action(policy[row][col])
+                next_steps_prob = [(mdp.step(state, move), float(mdp.transition_function[action][index])) for index, move in enumerate(mdp.actions)]
+                reward = float(mdp.get_reward(state))
+                v = reward + mdp.gamma * sum( P * float(U[next_step[0]][next_step[1]]) for next_step, P in next_steps_prob)
+                diff = np.abs(U[row][col] - v)
+                theta = max(theta, diff)
+                U[row][col] = v
 
-            # For each possible next state...
-            for i in range(4):
-                prob = mdp.transition_function[action][i]
-                next_state = mdp.step((row, col), list(Action)[i])
-                sum_on_next_steps = sum_on_next_steps + prob * (V[next_state[0]][next_state[1]])
-            
-            v = float(reward) + discount_factor * sum_on_next_steps
-            V[row][col] = v
-        
-    return V
+        if theta < epsilon:
+            break
+
+    return U
 
     # raise NotImplementedError
     # ========================
