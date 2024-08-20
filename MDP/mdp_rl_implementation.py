@@ -71,7 +71,31 @@ def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     policy = None
     # TODO:
     # ====== YOUR CODE: ====== 
-    raise NotImplementedError
+    num_rows = mdp.num_row
+    num_cols = mdp.num_col
+    # initialze policy to None:
+    policy = np.full((num_rows, num_cols), None, dtype=object)
+    
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if (row, col) not in mdp.terminal_states and mdp.board[row][col] != "WALL":
+                best_action = None
+                best_value = -float('inf')
+                
+                for action in Action:
+                    next_state = mdp.step((row, col), action)
+                    reward = mdp.get_reward(next_state)
+                    next_row, next_col = next_state
+                    utility = reward + mdp.gamma * U[next_row, next_col]
+                    
+                    if utility > best_value:
+                        best_value = utility
+                        best_action = action
+                
+                policy[row, col] = best_action
+    
+    return policy
+    
     # ========================
     return policy
 
