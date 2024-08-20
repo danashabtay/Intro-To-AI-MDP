@@ -134,6 +134,9 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
 
             sum_on_next_steps = 0
             action = policy[row][col]  # The action taken in the current state according to the policy
+            if action is None:
+                V[row][col] = None
+                continue
             #action_enum = Action[action]  # Convert the action to the Action enum type
 
             # For each possible next state...
