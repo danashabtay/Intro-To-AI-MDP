@@ -44,9 +44,6 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
     # run the value iteration algorithm and
     # return: the utility for each of the MDP's state obtained at the end of the algorithms' run.
     #
-    
-    U_final = None
-    # TODO:
     # ====== YOUR CODE: ======
     
     U = deepcopy(U_init)
@@ -54,19 +51,19 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
     
     while delta >= epsilon * ((1-mdp.gamma) / mdp.gamma):
         for state in mdp.terminal_states:
+            # row, col = state
             row = state[0]
             col = state[1]
             U[row][col] = float(mdp.board[row][col])
         U_final = deepcopy(U)
         delta = 0
-        states = get_states(mdp)
-        for row, col, value in states:
-            if(row,col) not in mdp.terminal_states:
+        #states = get_states(mdp)
+        for row, col, value in get_states(mdp):
+            if (row,col) not in mdp.terminal_states:
                 max_val, _ = get_max_value_and_action(mdp,U_final,row,col)
                 U[row][col] = float(value + mdp.gamma * max_val)
                 delta = max(delta, abs(U[row][col] - U_final[row][col]))
     return U_final
-    #raise NotImplementedError
     # ========================
     
 
