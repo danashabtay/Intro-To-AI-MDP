@@ -82,6 +82,11 @@ def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     return policy
     
     # ========================
+    
+def sum_next_steps(mdp, U, state, action):
+        next_steps_prob = [(mdp.step(state, move), float(mdp.transition_function[action][index])) for index, move in enumerate(mdp.actions)]
+        return sum( P * float(U[next_step[0]][next_step[1]]) for next_step, P in next_steps_prob)
+
 
 
 def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
@@ -92,7 +97,7 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
     # TODO:
     # ====== YOUR CODE: ======
     
-        # Initialize U 
+    # Initialize U 
     U = np.full((mdp.num_row, mdp.num_col), 0.0, dtype=object)
 
     for row in range(mdp.num_row):
@@ -114,9 +119,8 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
                 if state in mdp.terminal_states or mdp.board[row][col] == "WALL":
                     continue
                 action = Action(policy[row][col])
-                next_steps_prob = [(mdp.step(state, move), float(mdp.transition_function[action][index])) for index, move in enumerate(mdp.actions)]
                 reward = float(mdp.get_reward(state))
-                v = reward + mdp.gamma * sum( P * float(U[next_step[0]][next_step[1]]) for next_step, P in next_steps_prob)
+                v = reward + mdp.gamma * sum_next_steps(mdp, U, state, action)
                 diff = np.abs(U[row][col] - v)
                 theta = max(theta, diff)
                 U[row][col] = v
@@ -126,7 +130,6 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
 
     return U
 
-    # raise NotImplementedError
     # ========================
 
 
@@ -139,9 +142,41 @@ def policy_iteration(mdp: MDP, policy_init: np.ndarray) -> np.ndarray:
     optimal_policy = None
     # TODO:
     # ====== YOUR CODE: ======
-    raise NotImplementedError
-    # ========================
+    
+    policy = deepcopy(policy_init)
+
+    for row in range(mdp.num_row):
+        for col in range(mdp.num_col):
+            state = (row, col)
+            if state in mdp.terminal_states or mdp.board[row][col] == "WALL":
+                policy[row][col] = None
+  
+    while True:
+        unchanged = True
+        U = policy_evaluation(mdp,policy)
+        for row in range(mdp.num_row):
+            for col in range(mdp.num_col):
+                state = (row, col)
+                if state in mdp.terminal_states or mdp.board[row][col] == "WALL":
+                    continue
+                
+                max_val, max_action = get_max_value_and_action(mdp, U, row, col)
+                
+                action = Action(policy[row][col])
+                sum_steps = sum_next_steps(mdp, U, state, action)
+                
+                if max_val > sum_steps:
+                    policy[row][col] = max_action
+                    unchnaged = False
+        
+        if unchanged == True:
+            break
+        
+    optimal_policy = deepcopy(policy)
     return optimal_policy
+    # raise NotImplementedError
+    # ========================
+    
 
 
 
