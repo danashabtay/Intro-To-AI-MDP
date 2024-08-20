@@ -12,30 +12,29 @@ actions = ['UP', 'DOWN', 'RIGHT', 'LEFT']
 def get_states(mdp):
     states = []
     for row in range(mdp.num_row):
-            for col in range(mdp.num_col):
-                if mdp.board[row][col] == "WALL":
-                    continue
-                else:
-                    states.append((row, col, float(mdp.board[row][col])))
+        for col in range(mdp.num_col):
+            if mdp.board[row][col] != "WALL":
+                states.append((row, col, float(mdp.board[row][col])))
+    return states
     
 def get_max_value_and_action(mdp, U, row, col):
     values = []
     max_action = None
-    for action in actions: #check for each legal action its E value
+    for action in Action: 
         s = []
         for i in range(4):
             p = mdp.transition_function[action][i]
             if p == 0:
                 continue
-            next_state = mdp.step((row, col), actions[i])
+            next_state = mdp.step((row, col), list(Action)[i])
             s.append(p * U[next_state[0]][next_state[1]])   
         values.append([sum(s), action])
-        values_list = [j[0] for j in values]
+        values_list = [i[0] for i in values]
         max_value = max(values_list)
         max_index = values_list.index(max_value)
         max_action = values[max_index][1]
-
     return (max_value,max_action)               
+               
 
 
 def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> np.ndarray:
@@ -48,19 +47,16 @@ def value_iteration(mdp: MDP, U_init: np.ndarray, epsilon: float=10 ** (-3)) -> 
     
     U = deepcopy(U_init)
     delta = 1
-    
-    while delta >= epsilon * ((1-mdp.gamma) / mdp.gamma):
-        for state in mdp.terminal_states:
-            # row, col = state
-            row = state[0]
-            col = state[1]
+    while delta >= epsilon * ((1 - mdp.gamma) / mdp.gamma):
+        for state in mdp.terminal_states:  
+            row, col = state[0], state[1]
             U[row][col] = float(mdp.board[row][col])
         U_final = deepcopy(U)
         delta = 0
-        #states = get_states(mdp)
-        for row, col, value in get_states(mdp):
-            if (row,col) not in mdp.terminal_states:
-                max_val, _ = get_max_value_and_action(mdp,U_final,row,col)
+        current_states = get_states(mdp)
+        for row, col, value in current_states:
+            if (row, col) not in mdp.terminal_states: 
+                max_val, _ = get_max_value_and_action(mdp, U_final, row, col)
                 U[row][col] = float(value + mdp.gamma * max_val)
                 delta = max(delta, abs(U[row][col] - U_final[row][col]))
     return U_final
@@ -87,7 +83,85 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
     #
     # TODO:
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    
+    # Initialize V
+    V = np.zeros((mdp.num_row, mdp.num_col))
+
+    discount_factor= mdp.gamma
+
+    # For each state:
+    for row in range(mdp.num_row):
+        for col in range(mdp.num_col):
+            if mdp.board[row][col] == "WALL":
+                V[row][col] = None
+    
+    for state in mdp.terminal_states:  
+            row, col = state[0], state[1]
+            V[row][col] = float(mdp.board[row][col])
+            
+    for state in get_states(mdp): 
+        if state in mdp.terminal_states:
+            continue
+        else:
+            row, col = state[0], state[1]
+                    
+            reward = mdp.get_reward((row, col))
+
+            sum_on_next_steps = 0
+            action = policy[row][col]  # The action taken in the current state according to the policy
+            action_enum = Action[action]  # Convert the action to the Action enum type
+
+            # For each possible next state...
+            for i in range(4):
+                prob = mdp.transition_function[action_enum][i]
+                next_state = mdp.step((row, col), list(Action)[i])
+                sum_on_next_steps = sum_on_next_steps + prob * (V[next_state[0]][next_state[1]])
+            
+            v = reward + discount_factor * sum_on_next_steps
+            V[row][col] = v
+        
+    return V
+    
+    
+    
+    discount_factor= mdp.gamma
+    theta=0.00001
+    
+   # Initialize V
+    V = np.zeros((mdp.num_row, mdp.num_col))
+
+    while True:
+        delta = 0
+        # For each state:
+        for row in range(mdp.num_row):
+            for col in range(mdp.num_col):
+                if (row, col) in mdp.terminal_states or mdp.board[row][col] == "WALL":
+                    continue
+
+                sum_v = 0
+                action = policy[row][col]  # The action taken in the current state according to the policy
+                action_enum = Action[action]  # Convert the action to the Action enum type
+
+                # For each possible next state...
+                for i in range(4):
+                    prob = mdp.transition_function[action_enum][i]
+                    next_state = mdp.step((row, col), list(Action)[i])
+                    sum_v = sum_v + prob * (V[next_state[0]][next_state[1]])
+
+                reward = mdp.get_reward((row, col))
+                v = reward + discount_factor * sum_v
+                
+                # How much our value function changed (across any states)
+                delta = max(delta, np.abs(v - V[row][col]))
+                V[row][col] = v
+
+        # Stop evaluating once our value function change is below a threshold
+        if delta < theta:
+            break
+    
+    return V
+
+    # raise NotImplementedError
     # ========================
 
 
