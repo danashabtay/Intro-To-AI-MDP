@@ -128,3 +128,27 @@ class MDP:
                   gamma=gamma)
         
         return mdp
+
+
+
+
+def format_transition_function(transition_function: Dict[Action, Dict[Action, float]], action_order=[Action.UP, Action.DOWN, Action.RIGHT, Action.LEFT]) -> Dict[Action, Tuple[float]]:
+    result = {}
+    
+    for outer_action, inner_dict in transition_function.items():
+        # If the action is not in the inner dictionary, the probability is 0.0
+        ordered_tuple = tuple(inner_dict.get(action, 0.0) for action in action_order)
+        
+        result[outer_action] = ordered_tuple
+
+    return result
+
+
+def print_transition_function(transition_function: Union[Dict[Action, Dict[Action, float]], Dict[Action, Tuple[float]]], action_order=[Action.UP, Action.DOWN, Action.RIGHT, Action.LEFT]):
+    needs_formatting = isinstance(next(iter(transition_function.values())), dict)
+
+    formatted = format_transition_function(transition_function) if needs_formatting else transition_function
+
+    for action in action_order:
+        print(f"{action}: {str(formatted[action])[1:-1]}")
+        

@@ -1,7 +1,6 @@
 
 from mdp_rl_implementation import value_iteration, get_policy, policy_evaluation, policy_iteration, adp_algorithm
-from mdp import MDP, Action
-#format_transition_function, print_transition_function
+from mdp import MDP, Action, format_transition_function, print_transition_function
 from simulator import Simulator
 
 

@@ -77,8 +77,13 @@ def get_policy(mdp: MDP, U: np.ndarray) -> np.ndarray:
     policy = deepcopy(U)
     for row in range(mdp.num_row):
         for col in range(mdp.num_col):
+            state = (row, col)
+            if state in mdp.terminal_states or mdp.board[row][col] == "WALL":
+                policy[row][col] = None
+                continue
             _, action = get_max_value_and_action(mdp, U, row, col)
             policy[row][col] = action
+                   
     return policy
     
     # ========================
@@ -207,6 +212,41 @@ def adp_algorithm(
     reward_matrix = None
     # TODO
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    
+       # Initialize the reward matrix
+    reward_matrix = np.full((num_rows, num_cols), None)
+    
+    # Initialize the transition probabilities dictionary and action counts
+    action_index = {action: i for i, action in enumerate(actions)}
+
+    transition_probs = {action: {a: 0.0 for a in actions} for action in actions}
+
+    action_counts = {action: 0 for action in actions}
+
+    # Run the simulations
+    for episode_gen in sim.replay(num_episodes):
+        for step in episode_gen:
+            state, reward, chosen_action, actual_action = step
+            row, col = state
+
+            # Set the reward for the state if it hasn't been set yet
+            if reward_matrix[row, col] is None:
+                reward_matrix[row, col] = reward
+
+            if chosen_action is not None and actual_action is not None:
+                action_counts[chosen_action] += 1
+                #actual_action_index = action_index[actual_action]
+                transition_probs[chosen_action][actual_action] += 1
+
+    # Normalize the transition probabilities
+    for chosen_action in actions:
+        total = action_counts[chosen_action]
+        if total > 0:
+            for action, prob in transition_probs[chosen_action].items():
+                transition_probs[chosen_action][action] = prob / total
+
+    return reward_matrix, transition_probs
+
+    #raise NotImplementedError
     # ========================
     return reward_matrix, transition_probs 
