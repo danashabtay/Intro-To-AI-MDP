@@ -109,7 +109,7 @@ def policy_evaluation(mdp: MDP, policy: np.ndarray) -> np.ndarray:
         for col in range(mdp.num_col):
             state = (row, col)
             if mdp.board[row][col] == "WALL":
-                U[row][col] = None
+                U[row][col] = 0
             if state in mdp.terminal_states:
                 U[row][col] = float(mdp.get_reward(state))
             
@@ -172,7 +172,7 @@ def policy_iteration(mdp: MDP, policy_init: np.ndarray) -> np.ndarray:
                 
                 if max_val > sum_steps:
                     policy[row][col] = max_action
-                    unchnaged = False
+                    unchanged = False
         
         if unchanged == True:
             break
@@ -213,11 +213,10 @@ def adp_algorithm(
     # TODO
     # ====== YOUR CODE: ======
     
-       # Initialize the reward matrix
+    # Initialize the reward matrix
     reward_matrix = np.full((num_rows, num_cols), None)
     
     # Initialize the transition probabilities dictionary and action counts
-    action_index = {action: i for i, action in enumerate(actions)}
 
     transition_probs = {action: {a: 0.0 for a in actions} for action in actions}
 
@@ -247,6 +246,4 @@ def adp_algorithm(
 
     return reward_matrix, transition_probs
 
-    #raise NotImplementedError
     # ========================
-    return reward_matrix, transition_probs 

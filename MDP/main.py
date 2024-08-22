@@ -70,11 +70,43 @@ def adp_example_driver():
     formatted_transitions = format_transition_function(transition_probabilities)
     print("Transition Probabilities:")
     print_transition_function(formatted_transitions)
+   
+   
+def adp_dry_part():
     
+    mdp = MDP.load_mdp()
+    policy = [['UP', 'UP', 'UP', None],
+              ['UP', None, 'UP', None],
+              ['UP', 'UP', 'UP', 'UP']]
     
+    sim = Simulator()
+    reward_matrix, transition_probabilities = adp_algorithm(sim,num_episodes=10)
+    print("\n10 episodes policy:")
+    policy_new = policy_iteration(mdp, policy)
+    mdp.print_policy(policy_new)
+    formatted_transitions = format_transition_function(transition_probabilities)
+    print("Transition Probabilities:")
+    print_transition_function(formatted_transitions)
+
+    reward_matrix, transition_probabilities = adp_algorithm(sim,num_episodes=100)
+    print("\n100 episodes policy:")
+    policy_new = policy_iteration(mdp, policy)
+    mdp.print_policy(policy_new)
+    formatted_transitions = format_transition_function(transition_probabilities)
+    print("Transition Probabilities:")
+    print_transition_function(formatted_transitions)
+    
+    reward_matrix, transition_probabilities = adp_algorithm(sim,num_episodes=1000)
+    print("\n1000 episodes policy:")
+    policy_new = policy_iteration(mdp, policy)
+    mdp.print_policy(policy_new)
+    formatted_transitions = format_transition_function(transition_probabilities)
+    print("Transition Probabilities:")
+    print_transition_function(formatted_transitions)
 
     
 if __name__ == '__main__':
     # run our example
     example_driver()
     adp_example_driver()
+    #adp_dry_part()
